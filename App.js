@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
 import Task from './components/Task';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from 'react-native-vector-icons/Feather'; // Feather Icons
 
 export default function App() {
-  const [task, setTask] = useState();
+  const [task, setTask] = useState('');
   const [taskItems, setTaskItems] = useState([]); // List of tasks
   const [completedTasks, setCompletedTasks] = useState([]); // List of completed task IDs
   const [isEditing, setIsEditing] = useState(null); // State for editing task
+  const [searchQuery, setSearchQuery] = useState(''); // Search query state
 
   // Add a new task or update an existing one
   const handleAddTask = () => {
@@ -91,27 +92,42 @@ export default function App() {
     );
   };
 
+  // Filter tasks based on the search query
+  const filteredTasks = taskItems.filter(item =>
+    item.text.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <View style={styles.container}>
 
       <View style={styles.tasksWrapper}>
         <Text style={styles.sectionTitle}>ToDo Task!</Text>
 
+        {/* Search Bar */}
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search tasks..."
+          value={searchQuery}
+          onChangeText={text => setSearchQuery(text)}
+        />
+
         <View style={styles.items}>
-          {
-            taskItems.map((item) => {
-              return (
-                <Task
-                  key={item.id}
-                  text={item.text}
-                  completed={completedTasks.includes(item.id)} // Check if completed
-                  onCheck={() => handleCheckTask(item.id)} // Check/uncheck task
-                  onEdit={() => handleEditTask(item.id)} // Edit task
-                  onDelete={() => handleDeleteTask(item.id)} // Delete task
-                />
-              );
-            })
-          }
+          {/* Show tasks if available */}
+          {filteredTasks.length > 0 ? (
+            filteredTasks.map((item) => (
+              <Task
+                key={item.id}
+                text={item.text}
+                completed={completedTasks.includes(item.id)} // Check if completed
+                onCheck={() => handleCheckTask(item.id)} // Check/uncheck task
+                onEdit={() => handleEditTask(item.id)} // Edit task
+                onDelete={() => handleDeleteTask(item.id)} // Delete task
+              />
+            ))
+          ) : (
+            // Only show "Task not found" if there's a search query and no results
+            searchQuery.length > 0 && <Text style={styles.notFoundText}>Task not found</Text>
+          )}
         </View>
       </View>
 
@@ -127,7 +143,14 @@ export default function App() {
         />
         <TouchableOpacity onPress={handleAddTask}>
           <View style={styles.addWrapper}>
-            <Text style={styles.addText}>{isEditing !== null ? <Icon name="edit" size={24} color="brown" />  : "+"}</Text>
+            {/* Change the icon to "save" when editing */}
+            <Text style={styles.addText}>
+              {isEditing !== null ? (
+                <Icon name="save" size={24} color="brown" />  // Save icon when editing
+              ) : (
+                "+"
+              )}
+            </Text>
           </View>
         </TouchableOpacity>
       </KeyboardAvoidingView>
@@ -150,6 +173,15 @@ const styles = StyleSheet.create({
   },
   items: {
     marginTop: 30,
+  },
+  searchBar: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderColor: 'brown',
+    borderWidth: 1,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    marginBottom: 15,
   },
   writeTaskWrapper: {
     position: 'absolute',
@@ -181,5 +213,10 @@ const styles = StyleSheet.create({
   addText: {
     fontSize: 24,
     color: 'brown',
+  },
+  notFoundText: {
+    fontSize: 16,
+    color: 'gray',
+    textAlign: 'center',
   },
 });
